@@ -1,0 +1,6 @@
+# Las dependencias se gestionan con UV mediante pyproject.toml.
+# Para instalar el entorno ejecutar:
+#   uv sync
+#
+# Para ejecutar el bootstrap:
+#   uv run python bootstrap.py --region eu-west-1 --github-org <org> --github-repo <repo>

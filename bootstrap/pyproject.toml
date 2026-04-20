@@ -1,0 +1,24 @@
+[project]
+name = "aws-lifecycle-automation-bootstrap"
+version = "0.1.0"
+description = "Scripts de bootstrap para los prerrequisitos AWS del ciclo de vida de la aplicación serverless."
+requires-python = ">=3.11"
+dependencies = [
+    "boto3>=1.34.0",
+    "botocore>=1.34.0",
+]
+
+[tool.uv]
+# Las dependencias de desarrollo (linters, analizadores) se declaran aquí
+# para que no se instalen en el entorno de producción/CI.
+dev-dependencies = [
+    "bandit>=1.8.0",
+    "ruff>=0.4.0",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]

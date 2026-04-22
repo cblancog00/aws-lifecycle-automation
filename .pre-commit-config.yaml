@@ -1,11 +1,30 @@
 repos:
--   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v2.3.0
+  # Hooks generales de calidad
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
     hooks:
-    -   id: check-yaml
-    -   id: end-of-file-fixer
-    -   id: trailing-whitespace
--   repo: https://github.com/psf/black
-    rev: 22.10.0
+      - id: check-yaml
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: detect-private-key
+      - id: check-merge-conflict
+
+  # Formateo de Python
+  - repo: https://github.com/psf/black
+    rev: 24.4.2
     hooks:
-    -   id: black
+      - id: black
+
+  # Formato y validación de Terraform
+  - repo: https://github.com/antonbabenko/pre-commit-terraform
+    rev: v1.92.0
+    hooks:
+      - id: terraform_fmt
+
+  # Análisis de seguridad de IaC con Checkov (aislado)
+  - repo: https://github.com/bridgecrewio/checkov
+    rev: 3.2.386
+    hooks:
+      - id: checkov
+        args:
+          - --framework=terraform

@@ -1,19 +1,55 @@
 repos:
   # Hooks generales de calidad
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.6.0
+    rev: v5.0.0
     hooks:
-      - id: check-yaml
-      - id: end-of-file-fixer
-      - id: trailing-whitespace
-      - id: detect-private-key
+      - id: check-added-large-files
       - id: check-merge-conflict
+      - id: check-vcs-permalinks
+      - id: forbid-new-submodules
+      - id: no-commit-to-branch
+      - id: check-symlinks
+      - id: check-merge-conflict
+      - id: check-executables-have-shebangs
+      - id: end-of-file-fixer
+        exclude: |
+          (?x)^(
+            docs/.*|
+            .*.drawio|
+            .*.md|
+            .*.svg
+            )$
+      - id: check-yaml
+        args: [--allow-multiple-documents]
+        exclude: |
+          (?x)^(
+            .*.drawio
+            )$
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+        exclude: |
+          (?x)^(
+            docs/.*|
+            .*.drawio
+            )$
+      # Cross platform
+      - id: check-case-conflict
+      - id: mixed-line-ending
+        args: [--fix=lf]
 
-  # Formateo de Python
-  - repo: https://github.com/psf/black
-    rev: 24.4.2
+      # Seguridad
+      - id: detect-aws-credentials
+        args: ["--allow-missing-credentials"]
+      - id: detect-private-key
+
+  # Arregla errores tipográficos en la documentación
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.3.0
     hooks:
-      - id: black
+    - id: codespell
+      entry: codespell docs/
+      language: python
+      types: [text]
 
   # Formato y validación de Terraform
   - repo: https://github.com/antonbabenko/pre-commit-terraform
@@ -21,10 +57,40 @@ repos:
     hooks:
       - id: terraform_fmt
 
+  # Formateo de Python
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.4
+    hooks:
+      - id: ruff-check
+        args: [--fix]
+        types_or: [python]
+        language_version: python3.12
+      - id: ruff-format
+        types_or: [python]
+        language_version: python3.12
+
+  - repo: https://github.com/asottile/add-trailing-comma
+    rev: v3.1.0
+    hooks:
+      - id: add-trailing-comma
+
   # Análisis de seguridad de IaC con Checkov (aislado)
   - repo: https://github.com/bridgecrewio/checkov
     rev: 3.2.386
     hooks:
       - id: checkov
-        args:
-          - --framework=terraform
+        name: Checkov
+        entry: checkov -d . --quiet --download-external-modules True ## --skip-path code/pipeline/ --skip-path testing/
+        language: python
+        pass_filenames: false
+        always_run: false
+        files: \.tf$
+        exclude:
+          (?x)^(
+            \.+.terraform\/.*$
+            )$
+        require_serial: true
+
+default_language_version:
+  python: python3.12
+default_stages: [pre-commit]

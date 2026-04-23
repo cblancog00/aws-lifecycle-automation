@@ -27,7 +27,7 @@ resource "aws_lambda_function" "lambda-function" {
 
   code_signing_config_arn = var.aws_lambda_code_signing_config_arn
 
-  # To avoid issues with log_group deletions
+  # Para evitar problemas con la eliminación del log_group
   depends_on = [aws_cloudwatch_log_group.default, aws_iam_role.lambda_role]
 }
 

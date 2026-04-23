@@ -17,6 +17,6 @@ output "source_code_hash" {
 }
 
 output "function_name" {
-  description = "Lambda function name"
+  description = "Nombre de la función Lambda"
   value       = aws_lambda_function.lambda-function.function_name
 }

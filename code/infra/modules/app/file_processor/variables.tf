@@ -26,3 +26,8 @@ variable "signing_arn" {
   default     = null
   nullable    = true
 }
+
+variable "temp_db_table_name" {
+  description = "Nombre de la tabla DynamoDB temporal donde la Lambda escribirá los registros procesados"
+  type        = string
+}

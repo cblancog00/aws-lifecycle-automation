@@ -1,14 +1,6 @@
-terraform {
-  required_providers {
-    aws = {
-      source = "hashicorp/aws"
-    }
-  }
-}
-
 # Función Lambda que procesa los archivos depositados en el bucket de entrada
 module "lambda_file_processor" {
-  source = "../../lambda-functions"
+  source = "../../common/lambda-functions"
 
   description   = "Función Lambda para procesar los archivos depositados en el bucket de entrada"
   function_name = local.lambda_name
@@ -27,14 +19,16 @@ module "lambda_file_processor" {
   layers = var.layer_arn != null ? [var.layer_arn] : []
 
   custom_policies = {
-    "${local.lambda_name}-read-s3-policy" = data.aws_iam_policy_document.lambda_read_s3_policy.json
+    "${local.lambda_name}-read-s3-policy"      = data.aws_iam_policy_document.lambda_read_s3_policy.json
+    "${local.lambda_name}-write-dynamo-policy" = data.aws_iam_policy_document.lambda_write_dynamo_policy.json
   }
   aws_managed_policies = [
     data.aws_iam_policy.AWSLambdaDynamoDBExecutionRole.arn,
   ]
 
   environment_vars = {
-    ENVIRONMENT = var.environment
+    ENVIRONMENT        = var.environment
+    TEMP_DB_TABLE_NAME = var.temp_db_table_name
   }
 }
 

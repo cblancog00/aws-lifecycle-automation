@@ -1,0 +1,99 @@
+# Flujo de integración continua ejecutado en cada Pull Request.
+#
+# Jobs:
+#   1. pre-commit    – ejecuta todos los hooks de pre-commit sobre el código
+#                     modificado en la PR. Falla si algún hook produce cambios,
+#                     lo que indica que el desarrollador no lo ejecutó en local.
+#   2. python-tests  – ejecuta la suite de tests con pytest.
+#   3. python-sast   – análisis estático de seguridad con Bandit.
+#
+# Las comprobaciones de IaC (terraform fmt, Checkov) se realizan a través de
+# pre-commit, garantizando que se aplican tanto en local como en CI.
+
+name: CI – Pull Request
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  # --------------------------------------------------------------------------
+  # 1. Pre-commit
+  # --------------------------------------------------------------------------
+  pre-commit:
+    name: pre-commit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Instalar uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "latest"
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Configurar Terraform (requerido por hooks de terraform)
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "~1.7"
+
+      - name: Ejecutar pre-commit sobre todos los ficheros modificados
+        uses: pre-commit/action@v3.0.1
+
+  # --------------------------------------------------------------------------
+  # 2. Tests de Python
+  # --------------------------------------------------------------------------
+  python-tests:
+    name: Tests de Python
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: bootstrap/
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Instalar uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "latest"
+
+      - name: Instalar dependencias
+        run: uv sync
+
+      - name: Ejecutar tests con pytest
+        run: uv run pytest --tb=short -q
+
+  # --------------------------------------------------------------------------
+  # 3. Análisis estático de seguridad – Bandit
+  # --------------------------------------------------------------------------
+  python-sast:
+    name: SAST – Bandit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Instalar uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "latest"
+
+      - name: Instalar dependencias del bootstrap
+        working-directory: bootstrap/
+        run: uv sync
+
+      - name: Analizar bootstrap/ con Bandit
+        # -ll: nivel de severidad MEDIUM o superior
+        # -ii: nivel de confianza MEDIUM o superior
+        run: uv run bandit -r . -ll -ii --exclude .venv
+        id: plan

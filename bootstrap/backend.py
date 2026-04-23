@@ -6,6 +6,7 @@ gestionar cualquier infraestructura.
 Todas las operaciones son idempotentes: volver a ejecutar este módulo contra
 una cuenta ya inicializada es seguro y no produce ningún cambio.
 """
+
 from __future__ import annotations
 
 import json
@@ -75,8 +76,8 @@ def _configure_bucket(s3_client, bucket_name: str) -> None:
                 {
                     "ApplyServerSideEncryptionByDefault": {"SSEAlgorithm": "AES256"},
                     "BucketKeyEnabled": True,
-                }
-            ]
+                },
+            ],
         },
     )
 
@@ -94,7 +95,7 @@ def _configure_bucket(s3_client, bucket_name: str) -> None:
                     f"arn:aws:s3:::{bucket_name}/*",
                 ],
                 "Condition": {"Bool": {"aws:SecureTransport": "false"}},
-            }
+            },
         ],
     }
     s3_client.put_bucket_policy(
@@ -140,9 +141,7 @@ def create_tf_lock_table(config: BootstrapConfig) -> None:
     table_name = config.tf_lock_table
 
     if _table_exists(dynamodb, table_name):
-        logger.info(
-            "DynamoDB table '%s' already exists – skipping creation.", table_name
-        )
+        logger.info("DynamoDB table '%s' already exists – skipping creation.", table_name)
     else:
         dynamodb.create_table(
             TableName=table_name,

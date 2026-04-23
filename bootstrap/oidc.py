@@ -9,6 +9,7 @@ Referencia:
 
 Todas las operaciones son idempotentes.
 """
+
 from __future__ import annotations
 
 import logging
@@ -23,7 +24,7 @@ logger = logging.getLogger(__name__)
 # AWS valida el proveedor OIDC de GitHub utilizando su propia biblioteca de CAs en lugar
 # de la lista de thumbprints, por lo que el valor indicado es aceptado pero no verificado
 # criptográficamente por AWS. Coincide con la huella SHA-1 de la CA intermedia TLS de
-# GitHub y es el valor recomendado en la documentación oficial de GitHub.
+# GitHub y es el valor recomendado en la documentación official de GitHub.
 # Ver: https://github.blog/changelog/2022-01-13-github-actions-update-on-oidc-based-deployments-to-aws/
 _GITHUB_OIDC_THUMBPRINT = "6938fd4d98bab03faadb97b34396831e3780aea1"
 

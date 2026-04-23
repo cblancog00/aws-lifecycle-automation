@@ -1,5 +1,5 @@
 """
-IAM: crea el rol y la política de permisos inline que GitHub Actions asume
+IAM: crea el rol y la política de permisos inline que GitHub Actions assume
 (vía OIDC) para ejecutar Terraform contra la cuenta de AWS de destino.
 
 Los permisos siguen el principio de mínimo privilegio, limitados a los servicios
@@ -8,6 +8,7 @@ EventBridge Pipes, CloudWatch Logs e IAM para roles de ejecución de Lambda).
 
 Todas las operaciones son idempotentes.
 """
+
 from __future__ import annotations
 
 import json
@@ -47,13 +48,13 @@ def _build_trust_policy(config: BootstrapConfig) -> dict:
                 "Action": "sts:AssumeRoleWithWebIdentity",
                 "Condition": {
                     "StringEquals": {
-                        "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
+                        "token.actions.githubusercontent.com:aud": "sts.amazonaws.com",
                     },
                     "StringLike": {
-                        "token.actions.githubusercontent.com:sub": config.github_subject
+                        "token.actions.githubusercontent.com:sub": config.github_subject,
                     },
                 },
-            }
+            },
         ],
     }
 
@@ -68,7 +69,7 @@ def _build_permission_policy(config: BootstrapConfig) -> dict:
     Devuelve una política de permisos IAM que cubre los servicios de AWS que Terraform
     gestionará para la aplicación serverless.
 
-    Los permisos se limitan a la cuenta y al entorno donde es posible.
+    Los permisos se limitan a la cuenta y al entorno donde es possible.
     'iam:PassRole' se restringe a roles de ejecución de Lambda para evitar
     escalada de privilegios.
     """
@@ -107,10 +108,7 @@ def _build_permission_policy(config: BootstrapConfig) -> dict:
                     "dynamodb:DeleteItem",
                     "dynamodb:DescribeTable",
                 ],
-                "Resource": (
-                    f"arn:aws:dynamodb:{region}:{account}"
-                    f":table/{config.tf_lock_table}"
-                ),
+                "Resource": (f"arn:aws:dynamodb:{region}:{account}:table/{config.tf_lock_table}"),
             },
             # ---------------------------------------------------------------- #
             # Lambda (cómputo de la aplicación)                                #
@@ -259,9 +257,7 @@ def _build_permission_policy(config: BootstrapConfig) -> dict:
                     "logs:TagResource",
                     "logs:UntagResource",
                 ],
-                "Resource": (
-                    f"arn:aws:logs:{region}:{account}:log-group:/aws/lambda/*-{env}-*"
-                ),
+                "Resource": (f"arn:aws:logs:{region}:{account}:log-group:/aws/lambda/*-{env}-*"),
             },
             # ---------------------------------------------------------------- #
             # IAM – sólo roles de ejecución de Lambda (evita escalada de privilegios) #
@@ -293,9 +289,7 @@ def _build_permission_policy(config: BootstrapConfig) -> dict:
                 "Effect": "Allow",
                 "Action": "iam:PassRole",
                 "Resource": f"arn:aws:iam::{account}:role/*-{env}-lambda-*",
-                "Condition": {
-                    "StringEquals": {"iam:PassedToService": "lambda.amazonaws.com"}
-                },
+                "Condition": {"StringEquals": {"iam:PassedToService": "lambda.amazonaws.com"}},
             },
             # ---------------------------------------------------------------- #
             # STS – necesario para el proveedor AWS de Terraform               #
@@ -328,7 +322,7 @@ def _role_exists(iam_client, role_name: str) -> bool:
 
 def create_terraform_role(config: BootstrapConfig) -> str:
     """
-    Crea (o actualiza) el rol IAM que GitHub Actions asume para ejecutar Terraform.
+    Crea (o actualiza) el rol IAM que GitHub Actions assume para ejecutar Terraform.
     Devuelve el ARN del rol.
     """
     iam = boto3.client("iam")

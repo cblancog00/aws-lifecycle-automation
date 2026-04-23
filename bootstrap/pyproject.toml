@@ -16,6 +16,15 @@ dev-dependencies = [
     "ruff>=0.4.0",
 ]
 
+[tool.bandit]
+# Analizar todos los ficheros .py del directorio raíz recursivamente.
+# Se excluyen el entorno virtual y los tests (sin falsos positivos por asserts).
+targets = ["."]
+exclude_dirs = [".venv", "tests"]
+# Nivel de severidad y confianza mínimos que producen un fallo (MEDIUM o superior).
+severity = "medium"
+confidence = "medium"
+
 [tool.ruff]
 line-length = 100
 target-version = "py311"

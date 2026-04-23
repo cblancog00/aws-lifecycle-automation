@@ -1,7 +1,7 @@
 """
 Punto de entrada del bootstrap.
 
-Orquesta los tres pasos previos que deben existir antes de que Terraform
+Orquesta los tres pasos previous que deben existir antes de que Terraform
 pueda gestionar cualquier infraestructura:
 
   1. Backend remoto de Terraform  – bucket S3 + tabla de bloqueo DynamoDB.
@@ -19,6 +19,7 @@ Tras una ejecución exitosa el script imprime un resumen con los nombres de
 recursos y ARNs que deben referenciarse en la configuración del backend de
 Terraform y en los ficheros de flujo de trabajo de GitHub Actions.
 """
+
 from __future__ import annotations
 
 import logging
@@ -87,7 +88,7 @@ def main() -> None:
     print(f'  key                  = "{config.environment}/terraform.tfstate"')
     print(f'  region               = "{config.aws_region}"')
     print(f'  dynamodb_table       = "{config.tf_lock_table}"')
-    print(f"  encrypt              = true")
+    print("  encrypt              = true")
     print(separator)
     print("GitHub Actions secrets / variables:")
     print(f"  AWS_REGION           = {config.aws_region}")

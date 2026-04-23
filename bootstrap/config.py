@@ -1,6 +1,7 @@
 """
 Configuración del bootstrap: parsing de argumentos y dataclass de configuración central.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -11,7 +12,10 @@ import boto3
 
 @dataclass
 class BootstrapConfig:
-    """Almacena todos los valores de configuración derivados de los argumentos CLI y la cuenta de AWS."""
+    """
+    Almacena todos los valores de configuración derivados
+    de los argumentos CLI y la cuenta de AWS.
+    """
 
     aws_region: str
     aws_account_id: str
@@ -45,8 +49,7 @@ class BootstrapConfig:
     @property
     def oidc_provider_arn(self) -> str:
         return (
-            f"arn:aws:iam::{self.aws_account_id}:oidc-provider/"
-            "token.actions.githubusercontent.com"
+            f"arn:aws:iam::{self.aws_account_id}:oidc-provider/token.actions.githubusercontent.com"
         )
 
     @property
@@ -61,7 +64,7 @@ def load_config() -> BootstrapConfig:
         description=(
             "Crea los prerrequisitos de AWS necesarios para el estado remoto de Terraform "
             "y la autenticación OIDC de GitHub Actions."
-        )
+        ),
     )
     parser.add_argument(
         "--region",

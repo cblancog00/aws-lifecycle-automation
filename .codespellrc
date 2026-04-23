@@ -1,0 +1,5 @@
+[codespell]
+skip = *.svg,*.drawio,*.png,*.jpg,*.PNG,*.lock
+count = true
+write-changes =
+# ignore-words-list =

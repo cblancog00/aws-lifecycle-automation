@@ -1,0 +1,82 @@
+[
+  {
+    "id": "a1b2c3d4-0001-4e5f-8a9b-000000000001",
+    "username": "jgarcia92",
+    "first_name": "Jorge",
+    "last_name": "García",
+    "email": "jorge.garcia@example.com",
+    "phone": "+34 612 345 678",
+    "date_of_birth": "1992-03-15",
+    "address": {
+      "street": "Calle Mayor 42",
+      "city": "Madrid",
+      "country": "España",
+      "zip_code": "28013"
+    },
+    "created_at": "2024-01-10T08:30:00Z"
+  },
+  {
+    "id": "a1b2c3d4-0002-4e5f-8a9b-000000000002",
+    "username": "mlopez85",
+    "first_name": "María",
+    "last_name": "López",
+    "email": "maria.lopez@example.com",
+    "phone": "+34 623 456 789",
+    "date_of_birth": "1985-07-22",
+    "address": {
+      "street": "Avenida Diagonal 100",
+      "city": "Barcelona",
+      "country": "España",
+      "zip_code": "08018"
+    },
+    "created_at": "2024-02-14T11:15:00Z"
+  },
+  {
+    "id": "a1b2c3d4-0003-4e5f-8a9b-000000000003",
+    "username": "cfernandez01",
+    "first_name": "Carlos",
+    "last_name": "Fernández",
+    "email": "carlos.fernandez@example.com",
+    "phone": "+34 634 567 890",
+    "date_of_birth": "2001-11-05",
+    "address": {
+      "street": "Gran Vía 77",
+      "city": "Bilbao",
+      "country": "España",
+      "zip_code": "48011"
+    },
+    "created_at": "2024-03-01T09:00:00Z"
+  },
+  {
+    "id": "a1b2c3d4-0004-4e5f-8a9b-000000000004",
+    "username": "amoreno78",
+    "first_name": "Ana",
+    "last_name": "Moreno",
+    "email": "ana.moreno@example.com",
+    "phone": "+34 645 678 901",
+    "date_of_birth": "1978-09-30",
+    "address": {
+      "street": "Plaza de la Constitución 5",
+      "city": "Sevilla",
+      "country": "España",
+      "zip_code": "41001"
+    },
+    "created_at": "2024-04-20T14:45:00Z"
+  },
+  {
+    "id": "a1b2c3d4-0005-4e5f-8a9b-000000000005",
+    "username": "pjimenez99",
+    "first_name": "Pablo",
+    "last_name": "Jiménez",
+    "email": "pablo.jimenez@example.com",
+    "phone": "+34 656 789 012",
+    "date_of_birth": "1999-12-18",
+    "address": {
+      "street": "Calle Colón 23",
+      "city": "Valencia",
+      "country": "España",
+      "zip_code": "46004"
+    },
+    "created_at": "2024-05-05T16:20:00Z"
+  }
+]

@@ -9,9 +9,9 @@ terraform {
 
   backend "s3" {
     region         = "eu-central-1"
-    bucket         = "dev-aws-lifecycle-automation-terraform-state"
+    bucket         = "tfstate-992382825515-dev"
     key            = "dev/terraform.tfstate"
     encrypt        = true
-    dynamodb_table = "dev-ws-lifecycle-automation-terraform-locks"
+    dynamodb_table = "tfstate-lock-dev"
   }
 }

@@ -1,5 +1,5 @@
 [codespell]
-skip = *.svg,*.drawio,*.png,*.jpg,*.PNG,*.lock
+skip = *.svg,*.drawio,*.png,*.jpg,*.PNG,*.lock,*.json
 count = true
 write-changes =
 # ignore-words-list =

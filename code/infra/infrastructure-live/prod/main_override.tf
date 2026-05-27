@@ -8,7 +8,7 @@ terraform {
   }
 
   backend "s3" {
-    region         = "eu-south-2"
+    region         = "eu-central-1"
     bucket         = "prod-aws-lifecycle-automation-terraform-state"
     key            = "prod/terraform.tfstate"
     encrypt        = true

@@ -1,3 +1,3 @@
 provider "aws" {
-  region = "eu-south-2"
+  region = "eu-central-1"
 }

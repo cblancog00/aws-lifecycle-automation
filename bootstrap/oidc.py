@@ -37,7 +37,7 @@ def _provider_exists(iam_client, provider_arn: str) -> bool:
         iam_client.get_open_id_connect_provider(OpenIDConnectProviderArn=provider_arn)
         return True
     except ClientError as exc:
-        if exc.response["Error"]["Code"] == "NoSuchEntityException":
+        if exc.response["Error"]["Code"] == "NoSuchEntity":
             return False
         raise
 

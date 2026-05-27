@@ -23,7 +23,8 @@ repos:
         args: [--allow-multiple-documents]
         exclude: |
           (?x)^(
-            .*.drawio
+            .*.drawio|
+            code/pipeline/.*.yml
             )$
       - id: trailing-whitespace
         args: [--markdown-linebreak-ext=md]

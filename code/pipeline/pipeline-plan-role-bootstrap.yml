@@ -1,0 +1,83 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: |
+  Crea el rol IAM que GitHub Actions assume durante la fase de Terraform Plan.
+  Permisos de solo lectura sobre los recursos de la aplicacion mas acceso de
+  escritura al backend de estado de Terraform (S3 + DynamoDB).
+
+Parameters:
+  RoleName:
+    Type: String
+    Description: Nombre del rol IAM que asumira GitHub Actions
+    Default: github-actions-terraform-plan-dev
+
+  GitHubOrg:
+    Type: String
+    Description: Organizacion o usuario de GitHub dueno del repositorio
+
+  GitHubRepo:
+    Type: String
+    Description: Nombre del repositorio (sin el prefijo de organizacion)
+
+  TerraformStateBucket:
+    Type: String
+    Description: Nombre del bucket S3 que almacena el estado de Terraform
+
+  TerraformLockTable:
+    Type: String
+    Description: Nombre de la tabla DynamoDB usada para el bloqueo del estado
+
+Resources:
+  GitHubActionsIAMRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Ref RoleName
+      # Politica de confianza: solo tokens OIDC de GitHub Actions del repo configurado
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated: !Sub 'arn:aws:iam::${AWS::AccountId}:oidc-provider/token.actions.githubusercontent.com'
+            Action: sts:AssumeRoleWithWebIdentity
+            Condition:
+              StringLike:
+                token.actions.githubusercontent.com:sub: !Sub 'repo:${GitHubOrg}/${GitHubRepo}:*'
+              StringEquals:
+                token.actions.githubusercontent.com:aud: 'sts.amazonaws.com'
+      # Acceso de solo lectura a todos los servicios de AWS
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/ReadOnlyAccess
+      Policies:
+        # Permisos de escritura sobre el backend de estado de Terraform
+        - PolicyName: TerraformBackendAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              # Lectura y escritura del fichero de estado en S3
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                  - s3:DeleteObject
+                  - s3:ListBucket
+                  - s3:GetBucketVersioning
+                  - s3:GetEncryptionConfiguration
+                Resource:
+                  - !Sub 'arn:aws:s3:::${TerraformStateBucket}'
+                  - !Sub 'arn:aws:s3:::${TerraformStateBucket}/*'
+              # Adquisicion y liberacion del bloqueo del estado
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                  - dynamodb:DeleteItem
+                  - dynamodb:DescribeTable
+                Resource:
+                  - !Sub 'arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${TerraformLockTable}'
+
+Outputs:
+  GitHubActionsIAMRoleArn:
+    Description: ARN del rol IAM creado para la fase de Terraform Plan.
+    Value: !GetAtt GitHubActionsIAMRole.Arn
+    Export:
+      Name: !Sub '${RoleName}Arn'

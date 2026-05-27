@@ -90,10 +90,11 @@ jobs:
 
       - name: Instalar dependencias del bootstrap
         working-directory: bootstrap/
-        run: uv sync
+        run: uv sync --dev
 
       - name: Analizar bootstrap/ con Bandit
         # -ll: nivel de severidad MEDIUM o superior
         # -ii: nivel de confianza MEDIUM o superior
+        working-directory: bootstrap/
         run: uv run bandit -r . -ll -ii --exclude .venv
         id: plan

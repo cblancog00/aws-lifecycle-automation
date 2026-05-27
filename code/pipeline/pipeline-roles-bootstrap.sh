@@ -72,9 +72,12 @@ if [[ "$ENVIRONMENT" != "dev" && "$ENVIRONMENT" != "prod" ]]; then
     exit 1
 fi
 
-# Nombres de los recursos del backend de Terraform para cada entorno
-TF_STATE_BUCKET="${ENVIRONMENT}-aws-lifecycle-automation-terraform-state"
-TF_LOCK_TABLE="${ENVIRONMENT}-ws-lifecycle-automation-terraform-locks"
+# Nombres de los recursos del backend de Terraform para cada entorno.
+# El bucket sigue el patron del bootstrap: tfstate-{account_id}-{env}
+# La tabla sigue el patron: tfstate-lock-{env}
+AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+TF_STATE_BUCKET="tfstate-${AWS_ACCOUNT_ID}-${ENVIRONMENT}"
+TF_LOCK_TABLE="tfstate-lock-${ENVIRONMENT}"
 
 case "$ROLE_TYPE" in
     "plan")

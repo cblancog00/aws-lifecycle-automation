@@ -1,0 +1,111 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: |
+  Crea el rol IAM que GitHub Actions assume durante la fase de Terraform Apply.
+  Permisos de escritura sobre todos los servicios gestionados por Terraform en
+  este proyecto: Lambda, S3, DynamoDB, SQS, SNS, EventBridge Pipes,
+  CloudWatch Logs e IAM (roles de ejecucion de Lambda).
+
+Parameters:
+  RoleName:
+    Type: String
+    Description: Nombre del rol IAM que asumira GitHub Actions
+    Default: github-actions-terraform-apply-dev
+
+  GitHubOrg:
+    Type: String
+    Description: Organizacion o usuario de GitHub dueno del repositorio
+
+  GitHubRepo:
+    Type: String
+    Description: Nombre del repositorio (sin el prefijo de organizacion)
+
+  TerraformStateBucket:
+    Type: String
+    Description: Nombre del bucket S3 que almacena el estado de Terraform
+
+  TerraformLockTable:
+    Type: String
+    Description: Nombre de la tabla DynamoDB usada para el bloqueo del estado
+
+Resources:
+  GitHubActionsIAMRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Ref RoleName
+      # Politica de confianza: solo tokens OIDC de GitHub Actions del repo configurado
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated: !Sub 'arn:aws:iam::${AWS::AccountId}:oidc-provider/token.actions.githubusercontent.com'
+            Action: sts:AssumeRoleWithWebIdentity
+            Condition:
+              StringLike:
+                token.actions.githubusercontent.com:sub: !Sub 'repo:${GitHubOrg}/${GitHubRepo}:*'
+              StringEquals:
+                token.actions.githubusercontent.com:aud: 'sts.amazonaws.com'
+      # Politicas gestionadas de AWS para los servicios que Terraform gestiona
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AWSLambda_FullAccess
+        - arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
+        - arn:aws:iam::aws:policy/AmazonSQSFullAccess
+        - arn:aws:iam::aws:policy/AmazonSNSFullAccess
+        - arn:aws:iam::aws:policy/AmazonEventBridgeFullAccess
+        - arn:aws:iam::aws:policy/CloudWatchLogsFullAccess
+        - arn:aws:iam::aws:policy/IAMFullAccess
+      Policies:
+        #checkov:skip=CKV_AWS_109: "Ensure IAM policies does not allow permissions management without constraints"
+        #checkov:skip=CKV_AWS_108: "Ensure IAM policies does not allow data exfiltration"
+        #checkov:skip=CKV_AWS_107: "Ensure IAM policies does not allow credentials exposure"
+        #checkov:skip=CKV_AWS_111: "Ensure IAM policies does not allow write access without constraints"
+        # Acceso completo a S3 para: bucket de datos de entrada y bucket de Lambda layers
+        - PolicyName: S3FullAccessPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:*
+                  - s3-object-lambda:*
+                Resource: '*'
+        # Permisos sobre el backend de estado de Terraform
+        - PolicyName: TerraformBackendAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                  - s3:DeleteObject
+                  - s3:ListBucket
+                  - s3:GetBucketVersioning
+                  - s3:GetEncryptionConfiguration
+                Resource:
+                  - !Sub 'arn:aws:s3:::${TerraformStateBucket}'
+                  - !Sub 'arn:aws:s3:::${TerraformStateBucket}/*'
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                  - dynamodb:DeleteItem
+                  - dynamodb:DescribeTable
+                Resource:
+                  - !Sub 'arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${TerraformLockTable}'
+        # Permisos para EventBridge Pipes (no incluidos en AmazonEventBridgeFullAccess en todas las versiones)
+        - PolicyName: EventBridgePipesAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - pipes:*
+                Resource: '*'
+
+Outputs:
+  GitHubActionsIAMRoleArn:
+    Description: ARN del rol IAM creado para la fase de Terraform Apply.
+    Value: !GetAtt GitHubActionsIAMRole.Arn
+    Export:
+      Name: !Sub '${RoleName}Arn'

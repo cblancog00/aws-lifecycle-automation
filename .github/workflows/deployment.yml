@@ -1,0 +1,111 @@
+name: Pipeline Deployment
+
+on:
+  # checkov:skip=CKV_GHA_7 Uso justificado de workflow_dispatch para seleccion de entorno
+  workflow_dispatch:
+    inputs:
+      environment:
+        type: choice
+        options:
+          - dev
+          - prod
+        description: 'Environment to deploy to'
+        required: true
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  AWS_REGION: eu-central-1
+  TF_WORKING_DIR: code/infra/infrastructure-live/${{ github.event.inputs.environment }}
+
+jobs:
+  terraform-plan:
+    name: Terraform Plan
+    runs-on: ubuntu-latest
+    outputs:
+      plan-exists: ${{ steps.plan.outputs.plan-exists }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      # Construye el ARN del rol de plan a partir del account ID y el entorno
+      - name: Set plan role ARN
+        run: |
+          echo "PLAN_ROLE_ARN=arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/github-actions-terraform-plan-${{ github.event.inputs.environment }}" >> $GITHUB_ENV
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          audience: sts.amazonaws.com
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ env.PLAN_ROLE_ARN }}
+
+      - name: Terraform Init
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform init -input=false
+
+      - name: Terraform Plan
+        id: plan
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: |
+          terraform plan -input=false -out=tfplan.binary
+          echo "plan-exists=true" >> $GITHUB_OUTPUT
+
+      - name: Upload Terraform Plan artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tfplan-${{ github.event.inputs.environment }}
+          # Sube el plan binario y los zips de Lambda generados por archive_file
+          path: |
+            ${{ env.TF_WORKING_DIR }}/tfplan.binary
+            ${{ env.TF_WORKING_DIR }}/*.zip
+
+  terraform-apply:
+    name: Terraform Apply
+    needs: terraform-plan
+    if: ${{ needs.terraform-plan.outputs.plan-exists == 'true' }}
+    runs-on: ubuntu-latest
+    # La aprobacion manual se configura en GitHub UI: Settings > Environments
+    environment:
+      name: ${{ github.event.inputs.environment }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      # Instala uv para que el local-exec de la Lambda layer pueda construir el zip
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      # Construye el ARN del rol de apply a partir del account ID y el entorno
+      - name: Set apply role ARN
+        run: |
+          echo "APPLY_ROLE_ARN=arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/github-actions-terraform-apply-${{ github.event.inputs.environment }}" >> $GITHUB_ENV
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          audience: sts.amazonaws.com
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ env.APPLY_ROLE_ARN }}
+
+      - name: Download Terraform Plan artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: tfplan-${{ github.event.inputs.environment }}
+          path: ${{ env.TF_WORKING_DIR }}
+
+      - name: Terraform Init
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform init -input=false
+
+      - name: Terraform Apply
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform apply -input=false tfplan.binary

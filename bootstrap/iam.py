@@ -315,7 +315,7 @@ def _role_exists(iam_client, role_name: str) -> bool:
         iam_client.get_role(RoleName=role_name)
         return True
     except ClientError as exc:
-        if exc.response["Error"]["Code"] == "NoSuchEntityException":
+        if exc.response["Error"]["Code"] == "NoSuchEntity":
             return False
         raise
 

@@ -5,7 +5,7 @@ import boto3
 from boto3.dynamodb.types import TypeDeserializer, TypeSerializer
 from pydantic import BaseModel, ValidationError
 
-from ..common import Singleton
+from common.main import Singleton
 from .adapter import DatabaseAdapter, T
 
 logger = logging.getLogger(__name__)

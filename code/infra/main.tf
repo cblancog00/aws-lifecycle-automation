@@ -32,6 +32,12 @@ module "load_leveling_buffer" {
   environment         = var.environment
   dynamodb_stream_arn = module.dynamo_tables.temp_db_stream_arn
 }
+# Lambda Layers: pydantic + paquete fuente 'common'
+module "lambda_layers" {
+  source      = "../../modules/app/lambda-layers"
+  environment = var.environment
+}
+
 # Módulo de procesamiento de archivos
 module "file_processor" {
   source = "../../modules/app/file_processor"
@@ -40,4 +46,14 @@ module "file_processor" {
   input_bucket_name  = module.input_data.bucket_name
   input_bucket_arn   = module.input_data.bucket_arn
   temp_db_table_name = module.dynamo_tables.temp_db_table_name
+  layer_arn          = module.lambda_layers.file_processor_layer_arn
+}
+
+# Módulo de procesamiento de la cola SQS
+module "buffer_processor" {
+  source = "../../modules/app/buffer_processor"
+
+  environment         = var.environment
+  processor_queue_arn = module.load_leveling_buffer.processor_queue_arn
+  layer_arn           = module.lambda_layers.buffer_processor_layer_arn
 }

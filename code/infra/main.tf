@@ -25,9 +25,9 @@ module "dynamo_tables" {
   source      = "../../modules/app/dynamo_tables"
   environment = var.environment
 }
-# Fan-out buffer: propaga inserciones de temp_db via EventBridge Pipe → SNS → SQS
-module "fan_out_buffer" {
-  source = "../../modules/app/fan_out_buffer"
+# Load leveling buffer: receives temp_db inserts via EventBridge Pipe and queues them for processing
+module "load_leveling_buffer" {
+  source = "../../modules/app/load_leveling_buffer"
 
   environment         = var.environment
   dynamodb_stream_arn = module.dynamo_tables.temp_db_stream_arn

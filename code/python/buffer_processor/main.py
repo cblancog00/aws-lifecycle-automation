@@ -24,6 +24,7 @@ def lambda_handler(event, context):
 
     for sqs_record in event["Records"]:
         try:
+            raise
             dynamodb_event = parse_sqs_sns_message(sqs_record)
 
             new_image = dynamodb_event.get("dynamodb", {}).get("NewImage", {})

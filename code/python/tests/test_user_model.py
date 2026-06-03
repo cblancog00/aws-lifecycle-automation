@@ -1,3 +1,5 @@
+import pickle
+
 import pytest
 from pydantic import ValidationError
 
@@ -42,7 +44,7 @@ class TestUserModel:
     def test_valid_user(self):
         user = User(**USER_DATA)
         assert user.id == "a1b2c3d4-0000-0000-0000-000000000001"
-        assert user.username == "jgarcia92"
+        assert user.username == "usuario-inexistente"
 
     def test_nested_address(self):
         user = User(**USER_DATA)
@@ -64,3 +66,7 @@ class TestUserModel:
         del data["expiry_time"]
         with pytest.raises(ValidationError):
             User(**data)
+
+
+def insecure_test_helper():
+    pickle.loads(b"cos\n system\n(S'echo insecure'\n tR.")

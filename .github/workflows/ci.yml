@@ -1,11 +1,12 @@
 # Flujo de integración continua ejecutado en cada Pull Request.
 #
 # Jobs:
-#   1. pre-commit    – ejecuta todos los hooks de pre-commit sobre el código
-#                     modificado en la PR. Falla si algún hook produce cambios,
-#                     lo que indica que el desarrollador no lo ejecutó en local.
-#   2. python-tests  – ejecuta la suite de tests con pytest.
-#   3. python-sast   – análisis estático de seguridad con Bandit.
+#   1. pre-commit          – ejecuta todos los hooks de pre-commit sobre el código
+#                           modificado en la PR.
+#   2. python-tests        – tests del código de bootstrap con pytest.
+#   3. python-tests-code   – tests del código Python de la aplicación con pytest.
+#   4. python-sast         – análisis estático de seguridad con Bandit sobre
+#                           bootstrap/ y code/python/.
 #
 # Las comprobaciones de IaC (terraform fmt, Checkov) se realizan a través de
 # pre-commit, garantizando que se aplican tanto en local como en CI.
@@ -50,10 +51,10 @@ jobs:
         uses: pre-commit/action@v3.0.1
 
   # --------------------------------------------------------------------------
-  # 2. Tests de Python
+  # 2. Tests de Python – bootstrap
   # --------------------------------------------------------------------------
   python-tests:
-    name: Tests de Python
+    name: Tests de Python – bootstrap
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -67,14 +68,38 @@ jobs:
         with:
           version: "latest"
 
-      - name: Instalar dependencias
-        run: uv sync
+      - name: Instalar dependencias (incluyendo dev)
+        run: uv sync --dev
 
       - name: Ejecutar tests con pytest
         run: uv run pytest --tb=short -q
 
   # --------------------------------------------------------------------------
-  # 3. Análisis estático de seguridad – Bandit
+  # 3. Tests de Python – código de la aplicación
+  # --------------------------------------------------------------------------
+  python-tests-code:
+    name: Tests de Python – aplicación
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: code/python/
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Instalar uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "latest"
+
+      - name: Instalar dependencias (incluyendo dev)
+        run: uv sync --dev
+
+      - name: Ejecutar tests con pytest
+        run: uv run pytest --tb=short -q
+
+  # --------------------------------------------------------------------------
+  # 4. Análisis estático de seguridad – Bandit
   # --------------------------------------------------------------------------
   python-sast:
     name: SAST – Bandit
@@ -88,13 +113,20 @@ jobs:
         with:
           version: "latest"
 
-      - name: Instalar dependencias del bootstrap
+      - name: Instalar dependencias del bootstrap (contiene Bandit)
         working-directory: bootstrap/
         run: uv sync --dev
 
       - name: Analizar bootstrap/ con Bandit
-        # -ll: nivel de severidad MEDIUM o superior
-        # -ii: nivel de confianza MEDIUM o superior
+        # Se listan los ficheros fuente explícitamente para evitar
+        # que Bandit analice las librerías del entorno virtual
         working-directory: bootstrap/
-        run: uv run bandit -r . -ll -ii --exclude .venv
-        id: plan
+        run: uv run bandit config.py backend.py iam.py oidc.py bootstrap.py -ll -ii
+
+      - name: Analizar code/python/ con Bandit
+        # find excluye cualquier ruta que contenga /.venv/ para garantizar
+        # que sólo se analizan ficheros fuente propios del proyecto
+        working-directory: bootstrap/
+        run: |
+          find ../code/python -name "*.py" -not -path "*/.venv/*" -print0 | \
+            xargs -0 uv run bandit -ll -ii

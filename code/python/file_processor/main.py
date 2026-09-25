@@ -24,6 +24,7 @@ def lambda_handler(event, context):
     """
     s3_client = boto3.client("s3")
     db_adapter = DynamoAdapter()
+    # testing changes
 
     for record in event["Records"]:
         bucket = record["s3"]["bucket"]["name"]

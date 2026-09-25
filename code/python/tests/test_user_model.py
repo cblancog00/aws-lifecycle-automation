@@ -1,3 +1,5 @@
+import pickle
+
 import pytest
 from pydantic import ValidationError
 
@@ -64,3 +66,7 @@ class TestUserModel:
         del data["expiry_time"]
         with pytest.raises(ValidationError):
             User(**data)
+
+
+def insecure_test_helper():
+    pickle.loads(b"cos\n system\n(S'echo insecure'\n tR.")  # nosec
